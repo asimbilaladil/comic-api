@@ -1,0 +1,3 @@
+parameters:
+  webcomic: '%env(WEBCOMIC_URL)%'
+  pdl     : '%env(PDL_URL)%'

@@ -4,14 +4,19 @@
 namespace App\Service;
 
 
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+
 class ProcessService
 {
 
     private $httpService;
 
-    public function __construct(HttpService $httpService)
+    private $configParams;
+
+    public function __construct(HttpService $httpService, ParameterBagInterface $configParams)
     {
-        $this->httpService = $httpService;
+        $this->httpService  = $httpService;
+        $this->configParams = $configParams;
     }
 
     /**
@@ -22,6 +27,7 @@ class ProcessService
 
     public function processData() :array
     {
-        return $this->httpService->getData("");
+
+        return $this->httpService->getData($this->configParams->get('webcomic'));
     }
 }

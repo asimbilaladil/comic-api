@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Service\ProcessService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,6 +27,7 @@ class ComicController extends AbstractController
      */
     public function showAll()
     {
+
         $data = $this->processService->processData();
         // return a JSON response
         return new JsonResponse($data, Response::HTTP_CREATED);
