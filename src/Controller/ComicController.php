@@ -4,6 +4,7 @@
 namespace App\Controller;
 
 
+use App\Service\ProcessService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,9 +14,11 @@ use Symfony\Component\Routing\Annotation\Route;
 class ComicController extends AbstractController
 {
 
+    private $processService;
 
-    public function __construct()
+    public function __construct(ProcessService $processService)
     {
+        $this->processService = $processService;
     }
 
     /**
@@ -23,8 +26,9 @@ class ComicController extends AbstractController
      */
     public function showAll()
     {
+        $data = $this->processService->processData();
         // return a JSON response
-        return new JsonResponse(['status' => 200], Response::HTTP_CREATED);
+        return new JsonResponse($data, Response::HTTP_CREATED);
     }
 
 }
