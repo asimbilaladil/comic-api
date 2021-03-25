@@ -1,3 +1,9 @@
 #index:
 #    path: /
 #    controller: App\Controller\DefaultController::index
+
+api_comic_show_all:
+  path:       /api/comic
+  controller: App\Controller\ComicController::showAll
+  methods:    GET
+
