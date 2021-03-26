@@ -21,18 +21,22 @@ class HttpService
      *
      * @return array
      */
-    public function getData(string $url) :array
+    public function getData(string $url):array
     {
         $response = $this->client->request(
             'GET',
             $url
         );
-
-        $statusCode = $response->getStatusCode();
-        $content = $response->toArray();
-
+        $contentType = $response->getHeaders()['content-type'][0];
+        if($contentType == 'application/json'){
+            $content = $response->toArray();
+        } else{
+            $xml = simplexml_load_string($response->getContent());
+            $json = json_encode($xml);
+            $json = json_decode($json,TRUE);
+            $content = $json['channel']['item'];
+        }
         return [
-            'status'    => $statusCode,
             'data'      => $content
         ];
     }
