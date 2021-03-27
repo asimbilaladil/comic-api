@@ -1,6 +1,7 @@
 parameters:
   webcomic:
     url   : '%env(WEBCOMIC_URL)%'
-    num   : '%env(WEBCOMIC_NUM)%'
     type  : '%env(WEBCOMIC_TYPE)%'
-  pdl     : '%env(PDL_URL)%'
+    limit : '%env(WEBCOMIC_LIMIT)%'
+  pdl:
+    url   :  '%env(PDL_URL)%'

@@ -4,7 +4,6 @@
 namespace App\Service;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-
 class HttpService
 {
     private $client;
@@ -19,25 +18,29 @@ class HttpService
      *
      * @param string $url
      *
+     * @param string $type
+     *
      * @return array
      */
-    public function getData(string $url):array
+    public function getData(string $url): array
     {
-        $response = $this->client->request(
+        $response =  $this->client->request(
             'GET',
             $url
         );
-        $contentType = $response->getHeaders()['content-type'][0];
-        if($contentType == 'application/json'){
-            $content = $response->toArray();
-        } else{
-            $xml = simplexml_load_string($response->getContent());
-            $json = json_encode($xml);
-            $json = json_decode($json,TRUE);
-            $content = $json['channel']['item'];
+        if($response->getStatusCode() == 200) {
+            $contentType = $response->getHeaders()['content-type'][0];
+
+            $data = ($contentType == 'application/json') ? $response->toArray(): $response->getContent() ;
+
+            return [
+                "data" => $data,
+                "status" => true
+            ];
         }
         return [
-            'data'      => $content
+            "data" => [],
+            "status" => false
         ];
     }
 }

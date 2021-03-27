@@ -6,11 +6,8 @@ namespace App\Controller;
 
 use App\Service\ProcessService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
 
 class ComicController extends AbstractController
 {
@@ -23,14 +20,19 @@ class ComicController extends AbstractController
     }
 
     /**
-     * @Route("/api/comics}", methods={"GET"})
+     * showAll method is used to get all comics
+     *
+     * @return JsonResponse
      */
-    public function showAll()
+    public function showAll(): JsonResponse
     {
 
         $data = $this->processService->processData();
         // return a JSON response
-        return new JsonResponse($data, Response::HTTP_CREATED);
+        return new JsonResponse([
+            "data" => $data,
+            "status" => Response::HTTP_CREATED
+        ], Response::HTTP_CREATED);
     }
 
 }
