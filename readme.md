@@ -1,5 +1,5 @@
 
-Setting up your development environment on your local machine :
+**Setting up your development environment on your local machine :**
 
 ## 1. Clone the repository
 <ul>
@@ -25,4 +25,9 @@ Setting up your development environment on your local machine :
 ## 5. Run Docker
 <ul>
 <li>  docker-compose up -d</li> 
+</ul>
+
+****Api to get 20 recent comics :****
+<ul>
+<li> http://localhost:8080/api/comic </li> 
 </ul>

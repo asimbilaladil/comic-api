@@ -25,7 +25,7 @@ final class ProcessService
 
     private static function sort($a, $b): int
     {
-        return strcmp($a['date'], $b['date']);
+        return strtotime($b['date']) - strtotime($a['date']);
     }
 
     /**
