@@ -17,7 +17,12 @@ Setting up your development environment on your local machine :
 <li>  docker-compose build</li> 
 </ul>
 
-## 4. Run Docker
+## 4. Install composer packages
+<ul>
+<li> docker-compose run --rm --no-deps php-fpm composer install</li> 
+</ul>
+
+## 5. Run Docker
 <ul>
 <li>  docker-compose up -d</li> 
 </ul>
