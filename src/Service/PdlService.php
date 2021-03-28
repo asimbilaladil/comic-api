@@ -29,7 +29,7 @@ class PdlService
 
     public function comics(): array
     {
-        $response   = $this->httpService->getData($this->pdl['url'], 'xml');
+        $response   = $this->httpService->getData($this->pdl['url']);
         $data = [];
         if($response['status']){
             $xml        = simplexml_load_string($response['data']);
