@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
 
 namespace App\Service;
+
 use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Contracts\HttpClient\ResponseInterface;
 
 class HttpService
 {
@@ -13,34 +16,29 @@ class HttpService
         $this->client = $client;
     }
 
-    /**
-     * Gets the data from the url.
-     *
-     * @param string $url
-     *
-     * @param string $type
-     *
-     * @return array
-     */
     public function getData(string $url): array
     {
-        $response =  $this->client->request(
-            'GET',
-            $url
-        );
-        if($response->getStatusCode() == 200) {
+        $response = $this->getResponse('GET', $url);
+
+        $result = [
+            'data'      => [],
+            'status'    => false
+        ];
+        if($response->getStatusCode() === 200) {
             $contentType = $response->getHeaders()['content-type'][0];
 
-            $data = ($contentType == 'application/json') ? $response->toArray(): $response->getContent() ;
+            $data = ($contentType === 'application/json') ? $response->toArray(): $response->getContent();
 
-            return [
-                "data" => $data,
-                "status" => true
+            $result = [
+                "data"      => $data,
+                "status"    => true
             ];
         }
-        return [
-            "data" => [],
-            "status" => false
-        ];
+        return $result;
+    }
+
+    private function getResponse(string $method, string $url): ResponseInterface
+    {
+        return  $this->client->request($method, $url);
     }
 }

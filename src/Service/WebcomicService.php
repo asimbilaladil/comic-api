@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 
 namespace App\Service;
 
@@ -20,49 +21,56 @@ class WebcomicService
         $this->configParams = $configParams;
         $this->webcomic     = $this->configParams->get('webcomic');
     }
-    /**
-     * Use to process latest webcomic to get the latest webcomic number
-     *
-     * @return int
-     */
 
-    public function lastestWebcomicNumber(): int
+    public function getLastestNumber(): int
     {
-        $url            = $this->webcomic['url'].$this->webcomic['type'];
-        $response       = $this->httpService->getData($url);
-        if($response['status']) {
-            $currentComic   = $response['data'];
+        $url            = $this->buildUrl(null , $this->webcomic['type']);
+        $result         = $this->httpService->getData($url);
+        if($result['status']) {
+            $currentComic   = $result['data'];
             return $currentComic['num'];
         }
-        return 0;
+        return -1;
     }
 
-    /**
-     * Use to process recent 10 comics from webcomic data
-     *
-     * @param int $comicNumber
-     *
-     * @return array
-     */
-
-    public function webcomics(int $comicNumber): array
+    public function process(int $comicNumber): array
     {
         $data           = [];
         for($i=$comicNumber-$this->webcomic['limit']; $i<$comicNumber; $i++ ){
-            $url             = $this->webcomic['url'].$i.$this->webcomic['type'];
-            $response        = $this->httpService->getData($url, 'json');
-            if($response['status']){
-                $webcomicData   = $response['data'];
-                $date           = date_format(date_create($webcomicData['day'].'-'.$webcomicData['month'].'-'.$webcomicData['year']),'d-m-y');
-                $data[]         = [
-                    'title'  => $webcomicData['title'],
-                    'image'  => $webcomicData['img'],
-                    'webUrl' => $this->webcomic['url'].$i,
-                    'date'   => $date
-                ];
+            $url        = $this->buildUrl($i, $this->webcomic['type']);
+            $result     = $this->httpService->getData($url);
+            if($result['status']){
+                $data [] = $this->buildData($result['data'], $i);
             }
         }
 
         return $data;
+    }
+
+    private function buildData(array $data, int $num): array
+    {
+        return  [
+            'title'  => $data['title'],
+            'image'  => $data['img'],
+            'webUrl' => $this->buildUrl($num, null),
+            'date'   => $this->buildDate($data['day'], $data['month'], $data['year'])
+        ];
+    }
+
+    private function buildUrl(?int $num,  ?string $type): string
+    {
+        if($num === null){
+            $result = sprintf('%s%s', $this->webcomic['url'], $type);
+        } elseif ($type === null){
+            $result = sprintf('%s%d', $this->webcomic['url'], $num);
+        } else {
+            $result = sprintf('%s%d%s', $this->webcomic['url'], $num , $type);
+        }
+        return $result;
+    }
+
+    private function buildDate(string $day, string $month, string $year): string
+    {
+        return date_format(date_create($day.'-'.$month.'-'.$year),'d-m-Y');
     }
 }

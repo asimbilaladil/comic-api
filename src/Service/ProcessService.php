@@ -1,13 +1,10 @@
 <?php
 
+declare(strict_types=1);
 
 namespace App\Service;
 
-
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\Serializer\Encoder\XmlEncoder;
-
-class ProcessService
+final class ProcessService
 {
 
     private $pdlService;
@@ -39,9 +36,9 @@ class ProcessService
 
     public function processData(): array
     {
-        $webcomicNumber = $this->webcomicService->lastestWebcomicNumber();
-        $webcomic       = $this->webcomicService->webcomics($webcomicNumber);
-        $pdlComics      = $this->pdlService->comics();
+        $webcomicNumber = $this->webcomicService->getLastestNumber();
+        $webcomic       = $this->webcomicService->process($webcomicNumber);
+        $pdlComics      = $this->pdlService->process();
 
         $allComics  = array_merge($webcomic, $pdlComics);
         usort($allComics, array($this,'sort'));

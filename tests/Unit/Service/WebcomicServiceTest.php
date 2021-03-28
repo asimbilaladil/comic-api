@@ -1,135 +1,211 @@
 <?php
 
+declare(strict_types=1);
 
 namespace App\Tests\Unit\Service;
 
 use App\Service\HttpService;
 use App\Service\WebcomicService;
+use Generator;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
-class WebcomicServiceTest extends TestCase
+
+final class WebcomicServiceTest extends TestCase
 {
-    public function testLastestWebcomicNumberSuccess(): void
+    private $httpService;
+
+    private $parameterBagInterface;
+
+    private $webcomic;
+
+    public function setUp() :void
     {
-        $mockHttpService        = $this->createMock(HttpService::class);
-        $parameterBagInterface  = $this->createMock(ParameterBagInterface::class);
-
-        $webcomic['url']='https://xyz.com/';
-        $webcomic['type']='xyz.json';
-        $mockHttpService
-            ->method('getData')
-            ->willReturn([
-                'status' => true,
-                "data" => ["num" => 1]
-            ]);
-        $parameterBagInterface
-            ->expects($this->once())
-            ->method('get')
-            ->willReturn($webcomic);
-
-        $service = new WebcomicService(
-            $mockHttpService,
-            $parameterBagInterface
-        );
-
-        $result = $service->lastestWebcomicNumber();
-        $this->assertEquals(1, $result);
+        $this->httpService              = $this->createMock(HttpService::class);
+        $this->parameterBagInterface    = $this->createMock(ParameterBagInterface::class);
+        $this->webcomic                 = [
+            'url'   => 'https://xyz.com/',
+            'type'  =>  'xyz.json',
+            'limit' => 1
+        ];
     }
 
-    public function testLastestWebcomicNumberFail(): void
+    public function invokeMethod(&$object, string $methodName, array $parameters = [])
     {
-        $mockHttpService        = $this->createMock(HttpService::class);
-        $parameterBagInterface  = $this->createMock(ParameterBagInterface::class);
+        $reflection = new \ReflectionClass(get_class($object));
+        $method = $reflection->getMethod($methodName);
+        $method->setAccessible(true);
 
-        $webcomic['url']='https://xyz.com/';
-        $webcomic['type']='xyz.json';
-        $mockHttpService
-            ->method('getData')
-            ->willReturn([
-                'status' => false,
-                "data" => []
-            ]);
-        $parameterBagInterface
-            ->expects($this->once())
-            ->method('get')
-            ->willReturn($webcomic);
-
-        $service = new WebcomicService(
-            $mockHttpService,
-            $parameterBagInterface
-        );
-
-        $result = $service->lastestWebcomicNumber();
-        $this->assertEquals(0, $result);
+        return $method->invokeArgs($object, $parameters);
     }
 
-    public function testWebcomicsSuccess(): void
+    public function testBuildDate(): void
     {
-        $mockHttpService        = $this->createMock(HttpService::class);
-        $parameterBagInterface  = $this->createMock(ParameterBagInterface::class);
-
-        $webcomic['url']='https://xyz.com/';
-        $webcomic['type']='xyz.json';
-        $webcomic['limit']='1';
-        $mockHttpService
-            ->method('getData')
-            ->willReturn([
-                'status' => true,
-                "data" => [
-                    "month" => "01",
-                    "num" => 1,
-                    "year" => "2021",
-                    "img" => "https://xyz.com/hello.png",
-                    "title" => "test title",
-                    "day" => "26"]
-            ]);
-        $parameterBagInterface
+        $this->parameterBagInterface
             ->expects($this->once())
             ->method('get')
-            ->willReturn($webcomic);
+            ->willReturn($this->webcomic);
 
         $service = new WebcomicService(
-            $mockHttpService,
-            $parameterBagInterface
+            $this->httpService,
+            $this->parameterBagInterface
+        );
+        $day    = '10';
+        $month  = '11';
+        $year   = '2010';
+        $result = $this->invokeMethod($service, 'buildDate', [$day, $month, $year]);
+        $this->assertEquals('10-11-2010', $result);
+
+    }
+
+    public function testBuildData(): void
+    {
+        $this->parameterBagInterface
+            ->expects($this->once())
+            ->method('get')
+            ->willReturn($this->webcomic);
+
+        $service = new WebcomicService(
+            $this->httpService,
+            $this->parameterBagInterface
+        );
+        $num = 1;
+        $data = [
+            'title' => 'hello',
+            'img'   => 'test.png',
+            'day'   => '11',
+            'month' => '10',
+            'year'   => '2021'
+        ];
+        $expected = [
+            'title'  => 'hello',
+            'image'  => 'test.png',
+            'webUrl' => 'https://xyz.com/1',
+            'date'   => '11-10-2021'
+        ];
+        $result = $this->invokeMethod($service, 'buildData', [$data, $num]);
+
+        $this->assertEquals($expected, $result);
+
+    }
+
+    public function buildUrlDataProvider(): Generator
+    {
+        yield 'num is null' => [
+            null, '/xy.json', 'https://xyz.com//xy.json'
+        ];
+        yield 'type is null' => [
+            1, null, 'https://xyz.com/1'
+        ];
+
+        yield 'num and type is not null' => [
+            1, '/xy.json', 'https://xyz.com/1/xy.json'
+        ];
+    }
+
+    /**
+     * @dataProvider buildUrlDataProvider
+     */
+
+    public function testBuildUrl(?int $num,  ?string $type, string $expected): void
+    {
+        $this->parameterBagInterface
+            ->expects($this->once())
+            ->method('get')
+            ->willReturn($this->webcomic);
+
+        $service = new WebcomicService(
+            $this->httpService,
+            $this->parameterBagInterface
         );
 
-        $result = $service->webcomics(1);
+        $result = $this->invokeMethod($service, 'buildUrl', [$num, $type]);
+        $this->assertEquals($expected, $result);
 
-        $this->assertEquals( [[
+    }
+
+    public function lastestNumberDataProvider(): Generator
+    {
+        yield 'success' => [[
+            'status' => true,
+            "data" => ["num" => 1]
+        ], 1];
+
+        yield 'fail' => [[
+            'status' => false,
+            "data" => []
+        ],-1];
+    }
+
+    /**
+     * @dataProvider lastestNumberDataProvider
+     */
+
+    public function testLastestNumber(array $data, int $expected): void
+    {
+        $this->httpService
+            ->method('getData')
+            ->willReturn($data);
+        $this->parameterBagInterface
+            ->expects($this->once())
+            ->method('get')
+            ->willReturn($this->webcomic);
+
+        $service = new WebcomicService(
+            $this->httpService,
+            $this->parameterBagInterface
+        );
+
+        $result = $service->getLastestNumber();
+        $this->assertEquals($expected, $result);
+    }
+
+    public function processDataProvider(): Generator
+    {
+        yield 'success' => [[
+            'status' => true,
+            "data" => [
+                "month" => "01",
+                "num" => 1,
+                "year" => "2021",
+                "img" => "https://xyz.com/hello.png",
+                "title" => "test title",
+                "day" => "26"]
+        ], [[
             "title" => "test title",
             "image" => "https://xyz.com/hello.png",
             "webUrl" => "https://xyz.com/0",
-            "date" => "26-01-21",
-            ]], $result);
+            "date" => "26-01-2021",
+        ]]];
+
+        yield 'fail' => [[
+            'status' => false,
+            "data" => []
+        ], []];
     }
 
-    public function testWebcomicsFail(): void
-    {
-        $mockHttpService        = $this->createMock(HttpService::class);
-        $parameterBagInterface  = $this->createMock(ParameterBagInterface::class);
+    /**
+     * @dataProvider processDataProvider
+     */
 
-        $webcomic['url']='https://xyz.com/';
-        $webcomic['type']='xyz.json';
-        $webcomic['limit']='1';
-        $mockHttpService
+    public function testProcess(array $data, array $expected): void
+    {
+        $this->httpService
             ->method('getData')
-            ->willReturn([
-                'status' => false,
-                "data" => []
-            ]);
-        $parameterBagInterface
+            ->willReturn($data);
+        $this->parameterBagInterface
             ->expects($this->once())
             ->method('get')
-            ->willReturn($webcomic);
+            ->willReturn($this->webcomic);
 
         $service = new WebcomicService(
-            $mockHttpService,
-            $parameterBagInterface
+            $this->httpService,
+            $this->parameterBagInterface
         );
 
-        $result = $service->webcomics(1);
+        $result = $service->process(1);
 
-        $this->assertEquals( [], $result);
+        $this->assertEquals($expected , $result);
     }
+
 }

@@ -4,7 +4,7 @@
 namespace App\Tests\Feature\Api\Controller;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
-class ComicControllerTest  extends WebTestCase
+final class ComicControllerTest  extends WebTestCase
 {
 
     public function testComicApiSuccess(): void

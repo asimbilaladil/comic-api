@@ -1,8 +1,8 @@
 <?php
 
+declare(strict_types=1);
 
 namespace App\Service;
-
 
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
@@ -21,31 +21,39 @@ class PdlService
         $this->pdl          = $this->configParams->get('pdl');
     }
 
-    /**
-     * Use to process recent 10 comics from pdl data
-     *
-     * @return array
-     */
-
-    public function comics(): array
+    public function process(): array
     {
         $response   = $this->httpService->getData($this->pdl['url']);
-        $data = [];
+        $data       = [];
         if($response['status']){
-            $xml        = simplexml_load_string($response['data']);
-            $json       = json_decode(json_encode($xml),true);
-            $pdlComics  = $json['channel']['item'];
+            $pdlComics = $this->buildArray($response['data']);
             foreach ($pdlComics as $pdlComic){
-                $date   = date_format(date_create($pdlComic['pubDate']),'d-m-y');
-                $data[] = [
-                    'title'  => $pdlComic['title'],
-                    'image'  => $pdlComic['link'],
-                    'webUrl' => $pdlComic['guid'],
-                    'date'   => $date
-                ];
+                $data[] = $this->buildData($pdlComic);
             }
         }
         return $data;
+    }
+
+    private function buildData(array $data): array
+    {
+        return  [
+            'title'  => $data['title'],
+            'image'  => $data['link'],
+            'webUrl' => $data['guid'],
+            'date'   => $this->buildDate($data['pubDate'])
+        ];
+    }
+
+    private function buildArray(string $data): array
+    {
+        $xml        = simplexml_load_string($data);
+        $json       = json_decode(json_encode($xml),true);
+        return  $json['channel']['item'];
+    }
+
+    private function buildDate($publishDate): string{
+
+        return date_format(date_create($publishDate),'d-m-Y');
     }
 
 }
