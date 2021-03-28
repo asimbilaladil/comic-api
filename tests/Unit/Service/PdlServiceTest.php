@@ -6,7 +6,6 @@ namespace App\Tests\Unit\Service;
 
 use App\Service\HttpService;
 use App\Service\PdlService;
-use Generator;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
